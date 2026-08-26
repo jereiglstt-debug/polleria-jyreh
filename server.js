@@ -8,7 +8,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // 🚨 REEMPLAZA CON TU CLIENT ID REAL GENERADO EN GOOGLE CLOUD CONSOLE
-const GOOGLE_CLIENT_ID = "TU_CLIENT_ID_DE_GOOGLE.apps.googleusercontent.com";
+const GOOGLE_CLIENT_ID = "671969205745-3jkucr332s9e8pdo49752f8ihh6k7fgs.apps.googleusercontent.com";
 const client = new OAuth2Client(GOOGLE_CLIENT_ID);
 
 // Middlewares globales de performance y seguridad
@@ -99,7 +99,7 @@ app.delete('/api/productos/:id', (req, res) => {
 });
 
 
-// --- ENDPOINT DE AUTENTICACIÓN (GOOGLE) ---
+// --- ENDPOINT DE AUTENTICACIÓN (GOOGLE CON FILTRO DE SEGURIDAD) ---
 app.post('/api/auth/google', async (req, res) => {
     const { token } = req.body;
     try {
@@ -108,10 +108,19 @@ app.post('/api/auth/google', async (req, res) => {
             audience: GOOGLE_CLIENT_ID
         });
         const payload = ticket.getPayload();
+        const emailUsuario = payload['email'];
+        
+        // 🚨 CAMBIA ESTO POR TU CORREO REAL DE GMAIL (EL ÚNICO QUE TIENE PERMISO)
+        const EMAIL_ADMIN_PERMITIDO = "jereigl.stt@gmail.com"; 
+
+        if (emailUsuario !== EMAIL_ADMIN_PERMITIDO) {
+            console.warn(`🚨 Intento de acceso denegado para: ${emailUsuario}`);
+            return res.status(403).json({ error: 'No tienes permisos para acceder al panel de administración.' });
+        }
         
         const usuario = {
             google_id: payload['sub'],
-            email: payload['email'],
+            email: emailUsuario,
             nombre_completo: payload['name'],
             foto_url: payload['picture']
         };

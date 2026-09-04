@@ -7,7 +7,7 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 10000;
 
-// ⚠️ Tu Client ID de Google OAuth
+// Client ID de Google OAuth
 const GOOGLE_CLIENT_ID = "671969205745-3jkucr332s9e8pdo49752f8ihh6k7fgs.apps.googleusercontent.com"; 
 const client = new OAuth2Client(GOOGLE_CLIENT_ID);
 
@@ -32,7 +32,7 @@ db.serialize(() => {
         es_admin INTEGER DEFAULT 0
     )`);
 
-    // 2. Migraciones para bases de datos existentes: se intentan agregar las columnas por si faltan
+    // 2. Migraciones para bases de datos existentes
     db.run(`ALTER TABLE usuarios ADD COLUMN es_admin INTEGER DEFAULT 0`, () => {});
     db.run(`ALTER TABLE usuarios ADD COLUMN rol TEXT DEFAULT 'cliente'`, () => {});
 
@@ -47,7 +47,6 @@ db.serialize(() => {
     )`);
 
     // 4. Registro/Actualización del Administrador Principal
-    // Se proveen todos los campos (incluyendo 'rol') para evitar violaciones de NOT NULL
     const adminEmail = 'jereigl.stt@gmail.com';
     const adminNombre = 'Admin Jyreh';
 
@@ -74,7 +73,7 @@ app.use(session({
     resave: false,
     saveUninitialized: false,
     cookie: { 
-        secure: false, // Cambiar a true si se configura HTTPS estricto con proxy
+        secure: false, // Cambiar a true si usás HTTPS con proxy estricto
         maxAge: 1000 * 60 * 60 * 24 // La sesión dura 24 horas
     }
 }));
@@ -126,16 +125,23 @@ app.post('/api/auth/google', async (req, res) => {
                     return res.status(500).json({ error: "Error en la base de datos al guardar la sesión" });
                 }
 
-                const usuarioSession = {
-                    id: this.lastID || null,
-                    nombre_completo: name,
-                    email: email,
-                    es_admin: esAdmin === 1,
-                    rol: rolUsuario
-                };
+                // Consultar el ID exacto del usuario registrado o actualizado
+                db.get(`SELECT id FROM usuarios WHERE email = ?`, [email], (errUser, userRow) => {
+                    if (errUser || !userRow) {
+                        return res.status(500).json({ error: "Error al recuperar datos del usuario" });
+                    }
 
-                req.session.usuario = usuarioSession;
-                res.json({ usuario: usuarioSession });
+                    const usuarioSession = {
+                        id: userRow.id,
+                        nombre_completo: name,
+                        email: email,
+                        es_admin: esAdmin === 1,
+                        rol: rolUsuario
+                    };
+
+                    req.session.usuario = usuarioSession;
+                    res.json({ usuario: usuarioSession });
+                });
             }
         );
     } catch (error) {

@@ -103,23 +103,31 @@
 
         // --- MANEJO DE GOOGLE SIGN-IN ---
         function handleCredentialResponse(response) {
-            fetch('/api/auth/google', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ token: response.credential })
-            })
-            .then(res => res.json())
-            .then(data => {
-                if(data.usuario) {
-                    usuarioActual = data.usuario;
-                    document.getElementById('usuario-anonimo').style.display = 'none';
-                    document.getElementById('buttonDiv').style.display = 'none';
-                    document.getElementById('usuario-logueado').style.display = 'block';
-                    document.getElementById('nombre-usuario').innerText = `👋 ¡Hola, ${usuarioActual.nombre_completo}!`;
-                }
-            })
-            .catch(err => console.error("Error en login:", err));
+    fetch('/api/auth/google', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: response.credential })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.usuario) {
+            usuarioActual = data.usuario;
+            
+            // 🚀 SI ES EL ADMIN, LO ENVIAMOS AL PANEL DE CONTROL
+            if (usuarioActual.es_admin) {
+                window.location.href = '/admin';
+                return;
+            }
+
+            // Si es un cliente normal, solo mostramos su saludo en la tienda
+            document.getElementById('usuario-anonimo').style.display = 'none';
+            document.getElementById('buttonDiv').style.display = 'none';
+            document.getElementById('usuario-logueado').style.display = 'block';
+            document.getElementById('nombre-usuario').innerText = `👋 ¡Hola, ${usuarioActual.nombre_completo}!`;
         }
+    })
+    .catch(err => console.error("Error en login:", err));
+}
 
         function cerrarSesion() {
             usuarioActual = null;

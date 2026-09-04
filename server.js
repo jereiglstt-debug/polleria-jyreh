@@ -1,105 +1,68 @@
 const express = require('express');
-const sqlite3 = require('sqlite3').verbose(); // Usamos SQLite para DB Browser
-const path = require('path');
-const cors = require('cors');
+const session = require('express-session');
+const sqlite3 = require('sqlite3').verbose();
 const { OAuth2Client } = require('google-auth-library');
+const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// 🚨 REEMPLAZA CON TU CLIENT ID REAL GENERADO EN GOOGLE CLOUD CONSOLE
-const GOOGLE_CLIENT_ID = "671969205745-3jkucr332s9e8pdo49752f8ihh6k7fgs.apps.googleusercontent.com";
+// ⚠️ REEMPLAZA ESTO CON TU CLIENT ID REAL DE GOOGLE
+const GOOGLE_CLIENT_ID = "671969205745-3jkucr332s9e8pdo49752f8ihh6k7fgs.apps.googleusercontent.com"; 
 const client = new OAuth2Client(GOOGLE_CLIENT_ID);
 
-// Middlewares globales de performance y seguridad
-app.use(cors());
+// Conexión a Base de Datos
+const db = new sqlite3.Database('./polleria.db', (err) => {
+    if (err) console.error("Error al conectar SQLite:", err);
+    else console.log(" Base de datos polleria.db conectada.");
+});
+
+// Crear tablas e insertar Admin por defecto
+db.serialize(() => {
+    db.run(`CREATE TABLE IF NOT EXISTS usuarios (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        google_id TEXT UNIQUE,
+        nombre_completo TEXT,
+        email TEXT UNIQUE,
+        es_admin INTEGER DEFAULT 0
+    )`);
+
+    db.run(`CREATE TABLE IF NOT EXISTS productos (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        nombre TEXT NOT NULL,
+        descripcion TEXT,
+        precio_venta REAL NOT NULL,
+        unidad_medida TEXT DEFAULT 'kg',
+        imagen_url TEXT
+    )`);
+
+    // Marcar tu mail como Admin en la BD
+    db.run(`INSERT INTO usuarios (email, nombre_completo, es_admin) 
+            VALUES ('jereigl.stt@gmail.com', 'Admin Jyreh', 1) 
+            ON CONFLICT(email) DO UPDATE SET es_admin = 1`);
+});
+
+// Middlewares
 app.use(express.json());
-app.use(express.static(path.join(__dirname))); 
+app.use(express.static(path.join(__dirname, 'public'))); // O ajusta si tus html estan en la raiz
+app.use(session({
+    secret: 'polleria_jyreh_secret_key_2026',
+    resave: false,
+    saveUninitialized: false,
+    cookie: { secure: false }
+}));
 
-// --- CONEXIÓN A LA BASE DE DATOS DE DB BROWSER (SQLITE) ---
-// 🚨 Cambia 'polleria.db' por el nombre exacto de tu archivo de base de datos si es otro.
-const dbPath = path.join(__dirname, 'polleria.db'); 
-
-const db = new sqlite3.Database(dbPath, (err) => {
-    if (err) {
-        console.error('❌ Error abriendo el archivo de DB Browser:', err.message);
-        return;
-    }
-    console.log('🔗 Conectado exitosamente al archivo de base de datos de Jyreh');
-});
-
-// --- RUTAS DE NAVEGACIÓN ---
-
-// Tienda Principal (Frontend)
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'));
-});
-
-// Panel de Administración Interno
+// Servir Archivos HTML
+app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 app.get('/admin', (req, res) => {
-    res.sendFile(path.join(__dirname, 'admin.html'));
+    if (req.session.usuario && req.session.usuario.es_admin) {
+        res.sendFile(path.join(__dirname, 'admin.html'));
+    } else {
+        res.redirect('/');
+    }
 });
 
-
-// --- ENDPOINTS DE LA API (PRODUCTOS) ---
-
-// 1. Obtener todos los productos (Para la Tienda y el Administrador)
-app.get('/api/productos', (req, res) => {
-    const query = 'SELECT id, nombre, descripcion, precio_venta, unidad_medida, imagen_url FROM productos';
-    db.all(query, [], (err, rows) => {
-        if (err) {
-            console.error('Error al obtener productos:', err.message);
-            return res.status(500).json({ error: 'Error en el servidor al traer el catálogo' });
-        }
-        res.json(rows);
-    });
-});
-
-// 2. Crear un nuevo producto (Desde el Panel de Administración)
-app.post('/api/productos', (req, res) => {
-    const { nombre, descripcion, precio_venta, unidad_medida, imagen_url } = req.body;
-    const query = 'INSERT INTO productos (nombre, descripcion, precio_venta, unidad_medida, imagen_url) VALUES (?, ?, ?, ?, ?)';
-    
-    db.run(query, [nombre, descripcion, precio_venta, unidad_medida, imagen_url], function(err) {
-        if (err) {
-            console.error('Error al insertar producto:', err.message);
-            return res.status(500).json({ error: 'No se pudo guardar el producto' });
-        }
-        res.status(201).json({ message: 'Producto creado', id: this.lastID });
-    });
-});
-
-// 3. Modificar un producto existente (Desde el Panel de Administración)
-app.put('/api/productos/:id', (req, res) => {
-    const { id } = req.params;
-    const { nombre, descripcion, precio_venta, unidad_medida, imagen_url } = req.body;
-    const query = 'UPDATE productos SET nombre = ?, descripcion = ?, precio_venta = ?, unidad_medida = ?, imagen_url = ? WHERE id = ?';
-    
-    db.run(query, [nombre, descripcion, precio_venta, unidad_medida, imagen_url, id], function(err) {
-        if (err) {
-            console.error('Error al actualizar producto:', err.message);
-            return res.status(500).json({ error: 'No se pudieron guardar los cambios' });
-        }
-        res.json({ message: 'Producto actualizado con éxito' });
-    });
-});
-
-// 4. Eliminar un producto (Desde el Panel de Administración)
-app.delete('/api/productos/:id', (req, res) => {
-    const { id } = req.params;
-    const query = 'DELETE FROM productos WHERE id = ?';
-    
-    db.run(query, [id], function(err) {
-        if (err) {
-            console.error('Error al eliminar producto:', err.message);
-            return res.status(500).json({ error: 'No se pudo eliminar el producto' });
-        }
-        res.json({ message: 'Producto eliminado correctamente' });
-    });
-});
-
-
-// --- ENDPOINT DE AUTENTICACIÓN (GOOGLE CON FILTRO DE SEGURIDAD) ---
+// API: Autenticación con Google
 app.post('/api/auth/google', async (req, res) => {
     const { token } = req.body;
     try {
@@ -108,33 +71,86 @@ app.post('/api/auth/google', async (req, res) => {
             audience: GOOGLE_CLIENT_ID
         });
         const payload = ticket.getPayload();
-        const emailUsuario = payload['email'];
-        
-        // 🚨 CAMBIA ESTO POR TU CORREO REAL DE GMAIL (EL ÚNICO QUE TIENE PERMISO)
-        const EMAIL_ADMIN_PERMITIDO = "jereigl.stt@gmail.com"; 
+        const { sub, name, email } = payload;
 
-        if (emailUsuario !== EMAIL_ADMIN_PERMITIDO) {
-            console.warn(`🚨 Intento de acceso denegado para: ${emailUsuario}`);
-            return res.status(403).json({ error: 'No tienes permisos para acceder al panel de administración.' });
-        }
-        
-        const usuario = {
-            google_id: payload['sub'],
-            email: emailUsuario,
-            nombre_completo: payload['name'],
-            foto_url: payload['picture']
-        };
+        const esAdmin = (email === 'jereigl.stt@gmail.com') ? 1 : 0;
 
-        res.json({ message: 'Autenticación exitosa', usuario });
+        db.run(`INSERT INTO usuarios (google_id, nombre_completo, email, es_admin) 
+                VALUES (?, ?, ?, ?) 
+                ON CONFLICT(email) DO UPDATE SET google_id = ?, nombre_completo = ?`,
+            [sub, name, email, esAdmin, sub, name],
+            function (err) {
+                if (err) return res.status(500).json({ error: "Error en la BD" });
 
-    } catch (err) {
-        console.error('Error verificando token de Google:', err);
-        res.status(401).json({ error: 'Token de Google inválido' });
+                const usuarioSession = {
+                    id: this.lastID,
+                    nombre_completo: name,
+                    email: email,
+                    es_admin: esAdmin === 1
+                };
+
+                req.session.usuario = usuarioSession;
+                res.json({ usuario: usuarioSession });
+            }
+        );
+    } catch (error) {
+        res.status(400).json({ error: "Token de Google inválido" });
     }
 });
 
-
-// --- ENCENDER EL SERVIDOR ---
-app.listen(PORT, () => {
-    console.log(`🚀 Servidor de Pollería Jyreh corriendo en http://localhost:${PORT}`);
+// API: Obtener usuario actual
+app.get('/api/auth/me', (req, res) => {
+    if (req.session.usuario) {
+        res.json(req.session.usuario);
+    } else {
+        res.status(401).json({ error: "No autenticado" });
+    }
 });
+
+// API: Cerrar Sesión
+app.post('/api/auth/logout', (req, res) => {
+    req.session.destroy();
+    res.json({ ok: true });
+});
+
+// API: Productos (CRUD)
+app.get('/api/productos', (req, res) => {
+    db.all("SELECT * FROM productos", [], (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(rows);
+    });
+});
+
+app.post('/api/productos', (req, res) => {
+    if (!req.session.usuario || !req.session.usuario.es_admin) return res.status(403).json({ error: "No autorizado" });
+    const { nombre, descripcion, precio_venta, unidad_medida, imagen_url } = req.body;
+    db.run(`INSERT INTO productos (nombre, descripcion, precio_venta, unidad_medida, imagen_url) VALUES (?, ?, ?, ?, ?)`,
+        [nombre, descripcion, precio_venta, unidad_medida, imagen_url],
+        function (err) {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json({ id: this.lastID });
+        }
+    );
+});
+
+app.put('/api/productos/:id', (req, res) => {
+    if (!req.session.usuario || !req.session.usuario.es_admin) return res.status(403).json({ error: "No autorizado" });
+    const { nombre, descripcion, precio_venta, unidad_medida, imagen_url } = req.body;
+    db.run(`UPDATE productos SET nombre=?, descripcion=?, precio_venta=?, unidad_medida=?, imagen_url=? WHERE id=?`,
+        [nombre, descripcion, precio_venta, unidad_medida, imagen_url, req.params.id],
+        (err) => {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json({ ok: true });
+        }
+    );
+});
+
+app.delete('/api/productos/:id', (req, res) => {
+    if (!req.session.usuario || !req.session.usuario.es_admin) return res.status(403).json({ error: "No autorizado" });
+    db.run(`DELETE FROM productos WHERE id=?`, [req.params.id], (err) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ ok: true });
+    });
+});
+
+app.listen(PORT, () => console.log(`Servidor corriendo en http://localhost:${PORT}`));

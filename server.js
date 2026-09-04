@@ -7,33 +7,36 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 10000;
 
-// ⚠️ REEMPLAZA ESTO CON TU CLIENT ID REAL DE GOOGLE
+// ⚠️ Tu Client ID de Google OAuth
 const GOOGLE_CLIENT_ID = "671969205745-3jkucr332s9e8pdo49752f8ihh6k7fgs.apps.googleusercontent.com"; 
 const client = new OAuth2Client(GOOGLE_CLIENT_ID);
 
-// Conexión a Base de Datos
+// Conexión a la Base de Datos SQLite
 const db = new sqlite3.Database('./polleria.db', (err) => {
-    if (err) console.error("Error al conectar SQLite:", err);
-    else console.log("Base de datos polleria.db conectada.");
+    if (err) {
+        console.error(" Error crítico al conectar con SQLite:", err.message);
+    } else {
+        console.log(" Base de datos polleria.db conectada exitosamente.");
+    }
 });
 
-// Inicialización de la base de datos de forma segura
+// Inicialización de esquema y migraciones seguras
 db.serialize(() => {
-    // 1. Crear tabla usuarios si no existe
+    // 1. Estructura de la tabla usuarios
     db.run(`CREATE TABLE IF NOT EXISTS usuarios (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         google_id TEXT UNIQUE,
         nombre_completo TEXT,
         email TEXT UNIQUE,
+        rol TEXT DEFAULT 'cliente',
         es_admin INTEGER DEFAULT 0
     )`);
 
-    // 2. Agregar la columna 'es_admin' si la tabla ya existía sin ella
-    db.run(`ALTER TABLE usuarios ADD COLUMN es_admin INTEGER DEFAULT 0`, (err) => {
-        // Se ignora el error si la columna ya existía
-    });
+    // 2. Migraciones para bases de datos existentes: se intentan agregar las columnas por si faltan
+    db.run(`ALTER TABLE usuarios ADD COLUMN es_admin INTEGER DEFAULT 0`, () => {});
+    db.run(`ALTER TABLE usuarios ADD COLUMN rol TEXT DEFAULT 'cliente'`, () => {});
 
-    // 3. Crear tabla productos
+    // 3. Estructura de la tabla productos
     db.run(`CREATE TABLE IF NOT EXISTS productos (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         nombre TEXT NOT NULL,
@@ -43,10 +46,24 @@ db.serialize(() => {
         imagen_url TEXT
     )`);
 
-    // 4. Marcar tu mail como Admin por defecto
-    db.run(`INSERT INTO usuarios (email, nombre_completo, es_admin) 
-            VALUES ('jereigl.stt@gmail.com', 'Admin Jyreh', 1) 
-            ON CONFLICT(email) DO UPDATE SET es_admin = 1`);
+    // 4. Registro/Actualización del Administrador Principal
+    // Se proveen todos los campos (incluyendo 'rol') para evitar violaciones de NOT NULL
+    const adminEmail = 'jereigl.stt@gmail.com';
+    const adminNombre = 'Admin Jyreh';
+
+    db.run(
+        `INSERT INTO usuarios (email, nombre_completo, es_admin, rol) 
+         VALUES (?, ?, 1, 'admin') 
+         ON CONFLICT(email) DO UPDATE SET es_admin = 1, rol = 'admin'`,
+        [adminEmail, adminNombre],
+        (err) => {
+            if (err) {
+                console.error(" Error al inicializar usuario admin:", err.message);
+            } else {
+                console.log(` Usuario administrador (${adminEmail}) verificado correctamente en la BD.`);
+            }
+        }
+    );
 });
 
 // Middlewares
@@ -56,11 +73,18 @@ app.use(session({
     secret: 'polleria_jyreh_secret_key_2026',
     resave: false,
     saveUninitialized: false,
-    cookie: { secure: false }
+    cookie: { 
+        secure: false, // Cambiar a true si se configura HTTPS estricto con proxy
+        maxAge: 1000 * 60 * 60 * 24 // La sesión dura 24 horas
+    }
 }));
 
-// Servir Archivos HTML
-app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
+// RUTA HTML: Tienda
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+// RUTA HTML: Panel Admin (Protección del lado del servidor)
 app.get('/admin', (req, res) => {
     if (req.session.usuario && req.session.usuario.es_admin) {
         res.sendFile(path.join(__dirname, 'admin.html'));
@@ -69,9 +93,13 @@ app.get('/admin', (req, res) => {
     }
 });
 
-// API: Autenticación con Google
+// API: Autenticación con Token de Google
 app.post('/api/auth/google', async (req, res) => {
     const { token } = req.body;
+    if (!token) {
+        return res.status(400).json({ error: "Token no proporcionado" });
+    }
+
     try {
         const ticket = await client.verifyIdToken({
             idToken: token,
@@ -81,19 +109,29 @@ app.post('/api/auth/google', async (req, res) => {
         const { sub, name, email } = payload;
 
         const esAdmin = (email === 'jereigl.stt@gmail.com') ? 1 : 0;
+        const rolUsuario = esAdmin ? 'admin' : 'cliente';
 
-        db.run(`INSERT INTO usuarios (google_id, nombre_completo, email, es_admin) 
-                VALUES (?, ?, ?, ?) 
-                ON CONFLICT(email) DO UPDATE SET google_id = ?, nombre_completo = ?, es_admin = ?`,
-            [sub, name, email, esAdmin, sub, name, esAdmin],
+        db.run(
+            `INSERT INTO usuarios (google_id, nombre_completo, email, es_admin, rol) 
+             VALUES (?, ?, ?, ?, ?) 
+             ON CONFLICT(email) DO UPDATE SET 
+                google_id = ?, 
+                nombre_completo = ?, 
+                es_admin = ?, 
+                rol = ?`,
+            [sub, name, email, esAdmin, rolUsuario, sub, name, esAdmin, rolUsuario],
             function (err) {
-                if (err) return res.status(500).json({ error: "Error en la BD" });
+                if (err) {
+                    console.error("Error al registrar/actualizar usuario en Login:", err.message);
+                    return res.status(500).json({ error: "Error en la base de datos al guardar la sesión" });
+                }
 
                 const usuarioSession = {
-                    id: this.lastID,
+                    id: this.lastID || null,
                     nombre_completo: name,
                     email: email,
-                    es_admin: esAdmin === 1
+                    es_admin: esAdmin === 1,
+                    rol: rolUsuario
                 };
 
                 req.session.usuario = usuarioSession;
@@ -101,63 +139,85 @@ app.post('/api/auth/google', async (req, res) => {
             }
         );
     } catch (error) {
-        res.status(400).json({ error: "Token de Google inválido" });
+        console.error("Error al verificar token con Google:", error.message);
+        res.status(400).json({ error: "Token de Google inválido o expirado" });
     }
 });
 
-// API: Obtener usuario actual
+// API: Consultar estado de la sesión activa
 app.get('/api/auth/me', (req, res) => {
-    if (req.session.usuario) {
+    if (req.session && req.session.usuario) {
         res.json(req.session.usuario);
     } else {
-        res.status(401).json({ error: "No autenticado" });
+        res.status(401).json({ error: "No hay sesión activa" });
     }
 });
 
-// API: Cerrar Sesión
+// API: Cierre de Sesión
 app.post('/api/auth/logout', (req, res) => {
-    req.session.destroy();
-    res.json({ ok: true });
+    req.session.destroy((err) => {
+        if (err) {
+            return res.status(500).json({ error: "No se pudo cerrar la sesión" });
+        }
+        res.clearCookie('connect.sid');
+        res.json({ ok: true, mensaje: "Sesión cerrada correctamente" });
+    });
 });
 
-// API: Productos (CRUD)
+// API: Obtener productos para el catálogo
 app.get('/api/productos', (req, res) => {
     db.all("SELECT * FROM productos", [], (err, rows) => {
-        if (err) return res.status(500).json({ error: err.message });
+        if (err) {
+            return res.status(500).json({ error: "Error al consultar productos" });
+        }
         res.json(rows);
     });
 });
 
+// API: Crear producto (Solo Admin)
 app.post('/api/productos', (req, res) => {
-    if (!req.session.usuario || !req.session.usuario.es_admin) return res.status(403).json({ error: "No autorizado" });
+    if (!req.session.usuario || !req.session.usuario.es_admin) {
+        return res.status(403).json({ error: "Acceso denegado: Requiere permisos de administrador" });
+    }
     const { nombre, descripcion, precio_venta, unidad_medida, imagen_url } = req.body;
-    db.run(`INSERT INTO productos (nombre, descripcion, precio_venta, unidad_medida, imagen_url) VALUES (?, ?, ?, ?, ?)`,
-        [nombre, descripcion, precio_venta, unidad_medida, imagen_url],
+    db.run(
+        `INSERT INTO productos (nombre, descripcion, precio_venta, unidad_medida, imagen_url) VALUES (?, ?, ?, ?, ?)`,
+        [nombre, descripcion, precio_venta, unidad_medida || 'kg', imagen_url || ''],
         function (err) {
             if (err) return res.status(500).json({ error: err.message });
-            res.json({ id: this.lastID });
+            res.json({ id: this.lastID, mensaje: "Producto guardado con éxito" });
         }
     );
 });
 
+// API: Editar producto (Solo Admin)
 app.put('/api/productos/:id', (req, res) => {
-    if (!req.session.usuario || !req.session.usuario.es_admin) return res.status(403).json({ error: "No autorizado" });
+    if (!req.session.usuario || !req.session.usuario.es_admin) {
+        return res.status(403).json({ error: "Acceso denegado: Requiere permisos de administrador" });
+    }
     const { nombre, descripcion, precio_venta, unidad_medida, imagen_url } = req.body;
-    db.run(`UPDATE productos SET nombre=?, descripcion=?, precio_venta=?, unidad_medida=?, imagen_url=? WHERE id=?`,
+    db.run(
+        `UPDATE productos SET nombre=?, descripcion=?, precio_venta=?, unidad_medida=?, imagen_url=? WHERE id=?`,
         [nombre, descripcion, precio_venta, unidad_medida, imagen_url, req.params.id],
         (err) => {
             if (err) return res.status(500).json({ error: err.message });
-            res.json({ ok: true });
+            res.json({ ok: true, mensaje: "Producto actualizado" });
         }
     );
 });
 
+// API: Eliminar producto (Solo Admin)
 app.delete('/api/productos/:id', (req, res) => {
-    if (!req.session.usuario || !req.session.usuario.es_admin) return res.status(403).json({ error: "No autorizado" });
+    if (!req.session.usuario || !req.session.usuario.es_admin) {
+        return res.status(403).json({ error: "Acceso denegado: Requiere permisos de administrador" });
+    }
     db.run(`DELETE FROM productos WHERE id=?`, [req.params.id], (err) => {
         if (err) return res.status(500).json({ error: err.message });
-        res.json({ ok: true });
+        res.json({ ok: true, mensaje: "Producto eliminado" });
     });
 });
 
-app.listen(PORT, () => console.log(`Servidor corriendo en el puerto ${PORT}`));
+// Iniciar servidor
+app.listen(PORT, () => {
+    console.log(`🚀 Servidor ejecutándose en el puerto ${PORT}`);
+});

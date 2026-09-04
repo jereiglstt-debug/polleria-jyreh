@@ -7,6 +7,9 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 10000;
 
+// Necesario para que Render funcione con HTTPS y cookies de sesión
+app.set('trust proxy', 1);
+
 // Client ID de Google OAuth
 const GOOGLE_CLIENT_ID = "671969205745-3jkucr332s9e8pdo49752f8ihh6k7fgs.apps.googleusercontent.com"; 
 const client = new OAuth2Client(GOOGLE_CLIENT_ID);
@@ -68,13 +71,14 @@ db.serialize(() => {
 // Middlewares
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
+
 app.use(session({
     secret: 'polleria_jyreh_secret_key_2026',
     resave: false,
     saveUninitialized: false,
     cookie: { 
-        secure: false, // Cambiar a true si usás HTTPS con proxy estricto
-        maxAge: 1000 * 60 * 60 * 24 // La sesión dura 24 horas
+        secure: process.env.NODE_ENV === 'production', // Se activa automáticamente en HTTPS de Render
+        maxAge: 1000 * 60 * 60 * 24 // 24 horas
     }
 }));
 
@@ -125,7 +129,6 @@ app.post('/api/auth/google', async (req, res) => {
                     return res.status(500).json({ error: "Error en la base de datos al guardar la sesión" });
                 }
 
-                // Consultar el ID exacto del usuario registrado o actualizado
                 db.get(`SELECT id FROM usuarios WHERE email = ?`, [email], (errUser, userRow) => {
                     if (errUser || !userRow) {
                         return res.status(500).json({ error: "Error al recuperar datos del usuario" });
@@ -140,7 +143,13 @@ app.post('/api/auth/google', async (req, res) => {
                     };
 
                     req.session.usuario = usuarioSession;
-                    res.json({ usuario: usuarioSession });
+                    
+                    req.session.save((saveErr) => {
+                        if (saveErr) {
+                            return res.status(500).json({ error: "Error al guardar la sesión" });
+                        }
+                        res.json({ usuario: usuarioSession });
+                    });
                 });
             }
         );

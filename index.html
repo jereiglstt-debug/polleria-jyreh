@@ -3,238 +3,166 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pollería Jyreh</title>
+    <title>Pollería Jyreh - Catálogo</title>
+    <!-- Script Oficial de Google Identity Services -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Segoe UI', Arial, sans-serif; background: #fafafa; color: #222; padding: 20px; }
-        
-        .barra-usuario { background: #ffffff; color: #333; padding: 14px 24px; display: flex; justify-content: space-between; align-items: center; border-radius: 10px; margin-bottom: 25px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); border-left: 6px solid #d32f2f; }
-        .frase-identidad { font-style: italic; color: #d32f2f; font-weight: 700; font-size: 1.05em; }
-        .user-info { font-weight: bold; color: #333; display: flex; align-items: center; gap: 12px; }
-
-        header { background: #d32f2f; color: white; padding: 35px 20px; text-align: center; border-radius: 12px; margin-bottom: 30px; box-shadow: 0 4px 12px rgba(211, 47, 47, 0.2); }
-        header h1 { font-size: 3em; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; margin: 0; }
-        
-        .contenedor { display: flex; gap: 24px; flex-wrap: wrap; }
-        .seccion-productos { flex: 3; min-width: 300px; }
-        
-        .seccion-carrito { flex: 1; min-width: 290px; background: white; padding: 24px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.06); height: fit-content; border-top: 5px solid #2e7d32; }
-        .seccion-carrito h3 { color: #2e7d32; font-size: 1.4em; border-bottom: 2px solid #e8f5e9; padding-bottom: 10px; margin-bottom: 15px; }
-
-        .catalogo { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 20px; }
-        .tarjeta { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); text-align: center; display: flex; flex-direction: column; justify-content: space-between; border-top: 5px solid #d32f2f; transition: transform 0.2s; }
-        .tarjeta:hover { transform: translateY(-4px); }
-        
-        .contenedor-foto { width: 100%; height: 150px; background: #f0f0f0; border-radius: 8px; margin-bottom: 15px; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 1px dashed #ccc; }
-        .contenedor-foto img { width: 100%; height: 100%; object-fit: cover; }
-        .sin-foto { color: #888; font-size: 0.85em; font-style: italic; }
-
-        .precio { font-weight: bold; color: #2e7d32; font-size: 1.35em; margin: 12px 0; }
-        
-        button { background: #d32f2f; color: white; border: none; padding: 12px; width: 100%; border-radius: 8px; cursor: pointer; font-weight: bold; transition: transform 0.2s ease; font-size: 1em; }
-        button:hover { background: #b71c1c; transform: scale(1.04); }
-        
-        .btn-whatsapp { background: #27ae60; margin-top: 15px; font-size: 1.05em; padding: 14px; }
-        .btn-whatsapp:hover { background: #219150; }
-        
-        .btn-admin { background: #2980b9; color: white; padding: 8px 14px; text-decoration: none; border-radius: 6px; font-size: 0.9em; font-weight: bold; display: inline-block; }
-        .btn-admin:hover { background: #1c5980; }
-
-        .btn-salir { width: auto; padding: 8px 14px; font-size: 0.85em; background: #757575; }
-        .btn-salir:hover { background: #616161; }
-
-        .item-carrito { display: flex; justify-content: space-between; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #f0f0f0; }
-        .total-carrito { font-size: 1.3em; font-weight: bold; margin-top: 18px; text-align: right; color: #1b5e20; background: #e8f5e9; padding: 10px; border-radius: 6px; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #f8f9fa; color: #333; }
+        header { background-color: #d90429; color: white; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+        .user-panel { display: flex; align-items: center; gap: 15px; }
+        .btn { padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; text-decoration: none; display: inline-block; }
+        .btn-admin { background-color: #ffb703; color: #000; }
+        .btn-logout { background-color: #2b2d42; color: white; }
+        .container { max-width: 1200px; margin: 2rem auto; padding: 0 1rem; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; }
+        .card { background: white; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); overflow: hidden; display: flex; flex-direction: column; }
+        .card img { width: 100%; height: 180px; object-fit: cover; background-color: #eee; }
+        .card-body { padding: 15px; flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between; }
+        .precio { font-size: 1.25rem; color: #d90429; font-weight: bold; margin-top: 10px; }
     </style>
 </head>
 <body>
 
-    <div class="barra-usuario">
-        <div id="usuario-anonimo">
-            <span class="frase-identidad">¡Elegís calidad, elegís precio, elegís Jyreh!</span>
-        </div>
-        <div id="buttonDiv"></div>
-        
-        <div id="usuario-logueado" style="display: none;">
-            <div class="user-info">
-                <span id="nombre-usuario">👋 Hola</span>
-                <!-- BOTÓN PANEL DE CONTROL (Oculto por defecto, se muestra solo al Admin) -->
-                <a href="/admin" id="btn-panel-admin" class="btn-admin" style="display: none;">⚙️ Panel de Control</a>
-                <button class="btn-salir" onclick="cerrarSesion()">Salir</button>
-            </div>
-        </div>
-    </div>
-
     <header>
         <h1>Pollería Jyreh</h1>
+        <div class="user-panel">
+            <!-- Saludo de bienvenida -->
+            <span id="bienvenida-text"></span>
+            
+            <!-- Botón hacia el Panel Admin (Oculto por defecto) -->
+            <a id="btn-admin-panel" href="/admin" class="btn btn-admin" style="display: none;">⚙️ Panel Admin</a>
+            
+            <!-- Botón Cierre de Sesión (Oculto por defecto) -->
+            <button id="btn-logout" onclick="cerrarSesion()" class="btn btn-logout" style="display: none;">Cerrar Sesión</button>
+            
+            <!-- Contenedor del Botón Google Sign-In -->
+            <div id="google-btn-container"></div>
+        </div>
     </header>
 
-    <div class="contenedor">
-        <div class="seccion-productos">
-            <h2 style="margin-bottom: 15px; color: #333;">Nuestros Productos</h2>
-            <div class="catalogo" id="catalogo">
-                <p style="color: #777;">Cargando catálogo...</p>
-            </div>
-        </div>
-
-        <div class="seccion-carrito">
-            <h3>Tu Pedido 🛒</h3>
-            <div id="items-carrito">
-                <p style="color: #777;">El carrito está vacío.</p>
-            </div>
-            <div class="total-carrito" id="total">Total: $0.00</div>
-            <button class="btn-whatsapp" onclick="enviarWhatsApp()">📲 Confirmar Pedido (WhatsApp)</button>
+    <div class="container">
+        <h2 style="margin-bottom: 20px;">Nuestros Productos</h2>
+        <div id="productos-grid" class="grid">
+            <!-- Se cargan dinámicamente -->
         </div>
     </div>
 
     <script>
-        let carrito = [];
-        let productosData = [];
-        let usuarioActual = null;
-        const NUMERO_CELULAR = "5493884661016"; 
+        const CLIENT_ID = "671969205745-3jkucr332s9e8pdo49752f8ihh6k7fgs.apps.googleusercontent.com";
 
-        window.onload = async function () {
-            cargarProductos();
+        document.addEventListener("DOMContentLoaded", () => {
             verificarSesionActiva();
+            cargarProductos();
+            inicializarGoogle();
+        });
 
-            google.accounts.id.initialize({
-                client_id: "671969205745-3jkucr332s9e8pdo49752f8ihh6k7fgs.apps.googleusercontent.com", 
-                callback: handleCredentialResponse
-            });
-            google.accounts.id.renderButton(
-                document.getElementById("buttonDiv"),
-                { theme: "outline", size: "medium" } 
-            );
+        // 1. Inicializar Botón de Google
+        function inicializarGoogle() {
+            window.onload = function () {
+                google.accounts.id.initialize({
+                    client_id: CLIENT_ID,
+                    callback: handleCredentialResponse
+                });
+                google.accounts.id.renderButton(
+                    document.getElementById("google-btn-container"),
+                    { theme: "outline", size: "large", text: "signin_with" }
+                );
+            };
         }
 
-        async function verificarSesionActiva() {
-            try {
-                const res = await fetch('/api/auth/me');
-                if (res.ok) {
-                    const data = await res.json();
-                    aplicarInterfazUsuario(data);
-                }
-            } catch (err) {}
-        }
-
+        // 2. Manejar Respuesta de Google despues del Login
         function handleCredentialResponse(response) {
             fetch('/api/auth/google', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ token: response.credential })
             })
-            .then(res => res.json())
+            .then(res => {
+                if (!res.ok) throw new Error("Error en autenticación");
+                return res.json();
+            })
             .then(data => {
                 if (data.usuario) {
-                    aplicarInterfazUsuario(data.usuario);
+                    actualizarInterfaz(data.usuario);
                 }
+            })
+            .catch(err => {
+                console.error("Error al iniciar sesión:", err);
+                alert("No se pudo iniciar sesión. Verifique las credenciales.");
             });
         }
 
-        function aplicarInterfazUsuario(usuario) {
-            usuarioActual = usuario;
-            document.getElementById('usuario-anonimo').style.display = 'none';
-            document.getElementById('buttonDiv').style.display = 'none';
-            document.getElementById('usuario-logueado').style.display = 'block';
-            document.getElementById('nombre-usuario').innerText = `👋 Hola, ${usuario.nombre_completo}`;
-
-            // SI ES ADMIN (jereigl.stt@gmail.com) SE MUESTRA EL BOTÓN PANEL DE CONTROL
-            if (usuario.es_admin) {
-                document.getElementById('btn-panel-admin').style.display = 'inline-block';
-            }
-        }
-
-        async function cerrarSesion() {
-            await fetch('/api/auth/logout', { method: 'POST' });
-            window.location.reload();
-        }
-
-        async function cargarProductos() {
-            const divCatalogo = document.getElementById('catalogo');
-            try {
-                const res = await fetch('/api/productos');
-                productosData = await res.json();
-                if (!productosData.length) {
-                    divCatalogo.innerHTML = '<p style="color: #777;">No hay productos cargados.</p>';
-                    return;
-                }
-                divCatalogo.innerHTML = '';
-                productosData.forEach(p => {
-                    const precio = p.precio_venta || p.precio || 0;
-                    const unidad = p.unidad_medida || 'kg';
-                    let bloqueFoto = `<div class="contenedor-foto"><span class="sin-foto">Sin Foto</span></div>`;
-                    if (p.imagen_url) {
-                        bloqueFoto = `<div class="contenedor-foto"><img src="${p.imagen_url}" alt="${p.nombre}"></div>`;
-                    }
-
-                    divCatalogo.innerHTML += `
-                        <div class="tarjeta">
-                            ${bloqueFoto}
-                            <div>
-                                <h3>${p.nombre}</h3>
-                                <p style="color:#666; font-size:0.9em; margin-top:8px;">${p.descripcion || ''}</p>
-                            </div>
-                            <div>
-                                <p class="precio">$${Number(precio).toFixed(2)} <span style="font-size:0.7em; color:#666;">x ${unidad}</span></p>
-                                <button onclick="agregarAlCarrito(${p.id})">Agregar al pedido</button>
-                            </div>
-                        </div>
-                    `;
+        // 3. Verificar estado de la sesión activa al recargar la página
+        function verificarSesionActiva() {
+            fetch('/api/auth/me')
+                .then(res => {
+                    if (res.ok) return res.json();
+                    throw new Error("Sin sesión");
+                })
+                .then(usuario => {
+                    actualizarInterfaz(usuario);
+                })
+                .catch(() => {
+                    actualizarInterfaz(null);
                 });
-            } catch (err) {
-                divCatalogo.innerHTML = '<p>Error al cargar productos.</p>';
-            }
         }
 
-        function agregarAlCarrito(id) {
-            const producto = productosData.find(p => p.id === id);
-            if (!producto) return;
-            const item = carrito.find(i => i.id === id);
-            if (item) {
-                item.cantidad += 1;
+        // 4. Actualizar Elementos Visuales (Bienvenida y Botón Admin)
+        function actualizarInterfaz(usuario) {
+            const bienvenida = document.getElementById("bienvenida-text");
+            const btnAdmin = document.getElementById("btn-admin-panel");
+            const btnLogout = document.getElementById("btn-logout");
+            const googleContainer = document.getElementById("google-btn-container");
+
+            if (usuario) {
+                bienvenida.textContent = `¡Hola, ${usuario.nombre_completo}!`;
+                googleContainer.style.display = "none";
+                btnLogout.style.display = "inline-block";
+
+                // Mostrar botón de Admin ÚNICAMENTE si es_admin es true o 1
+                if (usuario.es_admin) {
+                    btnAdmin.style.display = "inline-block";
+                } else {
+                    btnAdmin.style.display = "none";
+                }
             } else {
-                carrito.push({ ...producto, cantidad: 1 });
+                bienvenida.textContent = "";
+                googleContainer.style.display = "block";
+                btnAdmin.style.display = "none";
+                btnLogout.style.display = "none";
             }
-            actualizarInterfazCarrito();
         }
 
-        function actualizarInterfazCarrito() {
-            const contenedor = document.getElementById('items-carrito');
-            const totalDiv = document.getElementById('total');
-            if (!carrito.length) {
-                contenedor.innerHTML = '<p style="color: #777;">El carrito está vacío.</p>';
-                totalDiv.innerText = "Total: $0.00";
-                return;
-            }
-            contenedor.innerHTML = '';
-            let total = 0;
-            carrito.forEach(item => {
-                const precio = item.precio_venta || 0;
-                const subtotal = precio * item.cantidad;
-                total += subtotal;
-                contenedor.innerHTML += `
-                    <div class="item-carrito">
-                        <span>${item.nombre} (x${item.cantidad})</span>
-                        <b>$${subtotal.toFixed(2)}</b>
-                    </div>
-                `;
-            });
-            totalDiv.innerText = `Total: $${total.toFixed(2)}`;
+        // 5. Cierre de sesión
+        function cerrarSesion() {
+            fetch('/api/auth/logout', { method: 'POST' })
+                .then(() => {
+                    window.location.reload();
+                });
         }
 
-        function enviarWhatsApp() {
-            if (!carrito.length) return alert("El carrito está vacío");
-            let cliente = usuarioActual ? usuarioActual.nombre_completo : "Cliente Web";
-            let texto = `🍗 *NUEVO PEDIDO - POLLERÍA JYREH*\n👤 *Cliente:* ${cliente}\n\n`;
-            let total = 0;
-            carrito.forEach(item => {
-                const subtotal = (item.precio_venta || 0) * item.cantidad;
-                total += subtotal;
-                texto += `• ${item.nombre} x${item.cantidad} -> *$${subtotal.toFixed(2)}*\n`;
-            });
-            texto += `\n💰 *Total: $${total.toFixed(2)}*`;
-            window.open(`https://api.whatsapp.com/send?phone=${NUMERO_CELULAR}&text=${encodeURIComponent(texto)}`, '_blank');
+        // 6. Cargar catálogo de productos
+        function cargarProductos() {
+            fetch('/api/productos')
+                .then(res => res.json())
+                .then(productos => {
+                    const grid = document.getElementById("productos-grid");
+                    grid.innerHTML = "";
+                    productos.forEach(p => {
+                        grid.innerHTML += `
+                            <div class="card">
+                                <img src="${p.imagen_url || 'https://via.placeholder.com/300'}" alt="${p.nombre}">
+                                <div class="card-body">
+                                    <h3>${p.nombre}</h3>
+                                    <p>${p.descripcion || ''}</p>
+                                    <div class="precio">$${p.precio_venta} / ${p.unidad_medida}</div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                })
+                .catch(err => console.error("Error al obtener productos:", err));
         }
     </script>
 </body>

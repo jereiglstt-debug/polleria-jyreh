@@ -4,25 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pollería Jyreh</title>
-    <!-- Librería oficial de Google Sign-In -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: 'Segoe UI', Arial, sans-serif; background: #fafafa; color: #222; padding: 20px; }
         
-        /* Barra Superior (Limpia, blanca con acento rojo) */
         .barra-usuario { background: #ffffff; color: #333; padding: 14px 24px; display: flex; justify-content: space-between; align-items: center; border-radius: 10px; margin-bottom: 25px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); border-left: 6px solid #d32f2f; }
         .frase-identidad { font-style: italic; color: #d32f2f; font-weight: 700; font-size: 1.05em; }
-        .user-info { font-weight: bold; color: #333; }
+        .user-info { font-weight: bold; color: #333; display: flex; align-items: center; gap: 12px; }
 
-        /* Encabezado con título gigante */
         header { background: #d32f2f; color: white; padding: 35px 20px; text-align: center; border-radius: 12px; margin-bottom: 30px; box-shadow: 0 4px 12px rgba(211, 47, 47, 0.2); }
         header h1 { font-size: 3em; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; margin: 0; }
         
         .contenedor { display: flex; gap: 24px; flex-wrap: wrap; }
         .seccion-productos { flex: 3; min-width: 300px; }
         
-        /* Seccion Carrito con acento verde */
         .seccion-carrito { flex: 1; min-width: 290px; background: white; padding: 24px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.06); height: fit-content; border-top: 5px solid #2e7d32; }
         .seccion-carrito h3 { color: #2e7d32; font-size: 1.4em; border-bottom: 2px solid #e8f5e9; padding-bottom: 10px; margin-bottom: 15px; }
 
@@ -30,51 +26,51 @@
         .tarjeta { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); text-align: center; display: flex; flex-direction: column; justify-content: space-between; border-top: 5px solid #d32f2f; transition: transform 0.2s; }
         .tarjeta:hover { transform: translateY(-4px); }
         
-        /* Espacio para Fotos */
         .contenedor-foto { width: 100%; height: 150px; background: #f0f0f0; border-radius: 8px; margin-bottom: 15px; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 1px dashed #ccc; }
         .contenedor-foto img { width: 100%; height: 100%; object-fit: cover; }
         .sin-foto { color: #888; font-size: 0.85em; font-style: italic; }
 
         .precio { font-weight: bold; color: #2e7d32; font-size: 1.35em; margin: 12px 0; }
         
-        /* Botones generales con efecto scale */
-        button { background: #d32f2f; color: white; border: none; padding: 12px; width: 100%; border-radius: 8px; cursor: pointer; font-weight: bold; transition: transform 0.2s ease, background-color 0.2s; font-size: 1em; }
+        button { background: #d32f2f; color: white; border: none; padding: 12px; width: 100%; border-radius: 8px; cursor: pointer; font-weight: bold; transition: transform 0.2s ease; font-size: 1em; }
         button:hover { background: #b71c1c; transform: scale(1.04); }
         
-        /* Boton de WhatsApp verde brillante */
         .btn-whatsapp { background: #27ae60; margin-top: 15px; font-size: 1.05em; padding: 14px; }
-        .btn-whatsapp:hover { background: #219150; transform: scale(1.04); }
+        .btn-whatsapp:hover { background: #219150; }
         
-        .btn-salir { width: auto; padding: 8px 16px; font-size: 0.85em; margin-left: 15px; background: #757575; }
-        .btn-salir:hover { background: #616161; transform: scale(1.04); }
+        .btn-admin { background: #2980b9; color: white; padding: 8px 14px; text-decoration: none; border-radius: 6px; font-size: 0.9em; font-weight: bold; display: inline-block; }
+        .btn-admin:hover { background: #1c5980; }
 
-        .item-carrito { display: flex; justify-content: space-between; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #f0f0f0; font-size: 0.95em; }
+        .btn-salir { width: auto; padding: 8px 14px; font-size: 0.85em; background: #757575; }
+        .btn-salir:hover { background: #616161; }
+
+        .item-carrito { display: flex; justify-content: space-between; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #f0f0f0; }
         .total-carrito { font-size: 1.3em; font-weight: bold; margin-top: 18px; text-align: right; color: #1b5e20; background: #e8f5e9; padding: 10px; border-radius: 6px; }
     </style>
 </head>
 <body>
 
-    <!-- BARRA SUPERIOR DE AUTENTICACIÓN -->
     <div class="barra-usuario">
         <div id="usuario-anonimo">
             <span class="frase-identidad">¡Elegís calidad, elegís precio, elegís Jyreh!</span>
         </div>
-        <!-- Contenedor donde Google pintará el botón automáticamente -->
         <div id="buttonDiv"></div>
         
         <div id="usuario-logueado" style="display: none;">
-            <span class="user-info" id="nombre-usuario">👋 Hola, Cliente</span>
-            <button class="btn-salir" onclick="cerrarSesion()">Salir</button>
+            <div class="user-info">
+                <span id="nombre-usuario">👋 Hola</span>
+                <!-- BOTÓN PANEL DE CONTROL (Oculto por defecto, se muestra solo al Admin) -->
+                <a href="/admin" id="btn-panel-admin" class="btn-admin" style="display: none;">⚙️ Panel de Control</a>
+                <button class="btn-salir" onclick="cerrarSesion()">Salir</button>
+            </div>
         </div>
     </div>
 
-    <!-- ENCABEZADO CON TITULO GIGANTE -->
     <header>
         <h1>Pollería Jyreh</h1>
     </header>
 
     <div class="contenedor">
-        <!-- Catálogo de Productos -->
         <div class="seccion-productos">
             <h2 style="margin-bottom: 15px; color: #333;">Nuestros Productos</h2>
             <div class="catalogo" id="catalogo">
@@ -82,7 +78,6 @@
             </div>
         </div>
 
-        <!-- Carrito de Compras -->
         <div class="seccion-carrito">
             <h3>Tu Pedido 🛒</h3>
             <div id="items-carrito">
@@ -97,51 +92,13 @@
         let carrito = [];
         let productosData = [];
         let usuarioActual = null;
-        
-        // 🚨 REEMPLAZA CON TU NÚMERO DE CELULAR DE WHATSAPP (Con código de país, ej: 549 para Argentina)
         const NUMERO_CELULAR = "5493884661016"; 
 
-        // --- MANEJO DE GOOGLE SIGN-IN ---
-        function handleCredentialResponse(response) {
-    fetch('/api/auth/google', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token: response.credential })
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.usuario) {
-            usuarioActual = data.usuario;
-            
-            // 🚀 SI ES EL ADMIN, LO ENVIAMOS AL PANEL DE CONTROL
-            if (usuarioActual.es_admin) {
-                window.location.href = '/admin';
-                return;
-            }
-
-            // Si es un cliente normal, solo mostramos su saludo en la tienda
-            document.getElementById('usuario-anonimo').style.display = 'none';
-            document.getElementById('buttonDiv').style.display = 'none';
-            document.getElementById('usuario-logueado').style.display = 'block';
-            document.getElementById('nombre-usuario').innerText = `👋 ¡Hola, ${usuarioActual.nombre_completo}!`;
-        }
-    })
-    .catch(err => console.error("Error en login:", err));
-}
-
-        function cerrarSesion() {
-            usuarioActual = null;
-            document.getElementById('usuario-anonimo').style.display = 'block';
-            document.getElementById('buttonDiv').style.display = 'block';
-            document.getElementById('usuario-logueado').style.display = 'none';
-        }
-
-        window.onload = function () {
+        window.onload = async function () {
             cargarProductos();
+            verificarSesionActiva();
 
-            // Inicializar el botón de Google
             google.accounts.id.initialize({
-                // 🚨 COPIA Y PEGA AQUÍ TU ID DE CLIENTE LARGO DE GOOGLE CLOUD CONSOLE
                 client_id: "671969205745-3jkucr332s9e8pdo49752f8ihh6k7fgs.apps.googleusercontent.com", 
                 callback: handleCredentialResponse
             });
@@ -151,66 +108,93 @@
             );
         }
 
-        // --- FUNCIONES DEL CARRITO Y CATÁLOGO CORREGIDO ---
+        async function verificarSesionActiva() {
+            try {
+                const res = await fetch('/api/auth/me');
+                if (res.ok) {
+                    const data = await res.json();
+                    aplicarInterfazUsuario(data);
+                }
+            } catch (err) {}
+        }
+
+        function handleCredentialResponse(response) {
+            fetch('/api/auth/google', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ token: response.credential })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.usuario) {
+                    aplicarInterfazUsuario(data.usuario);
+                }
+            });
+        }
+
+        function aplicarInterfazUsuario(usuario) {
+            usuarioActual = usuario;
+            document.getElementById('usuario-anonimo').style.display = 'none';
+            document.getElementById('buttonDiv').style.display = 'none';
+            document.getElementById('usuario-logueado').style.display = 'block';
+            document.getElementById('nombre-usuario').innerText = `👋 Hola, ${usuario.nombre_completo}`;
+
+            // SI ES ADMIN (jereigl.stt@gmail.com) SE MUESTRA EL BOTÓN PANEL DE CONTROL
+            if (usuario.es_admin) {
+                document.getElementById('btn-panel-admin').style.display = 'inline-block';
+            }
+        }
+
+        async function cerrarSesion() {
+            await fetch('/api/auth/logout', { method: 'POST' });
+            window.location.reload();
+        }
+
         async function cargarProductos() {
             const divCatalogo = document.getElementById('catalogo');
             try {
                 const res = await fetch('/api/productos');
                 productosData = await res.json();
-                
-                if (!productosData || productosData.length === 0) {
-                    divCatalogo.innerHTML = '<p style="color: #777;">No hay productos disponibles en este momento.</p>';
+                if (!productosData.length) {
+                    divCatalogo.innerHTML = '<p style="color: #777;">No hay productos cargados.</p>';
                     return;
                 }
-
                 divCatalogo.innerHTML = '';
-
                 productosData.forEach(p => {
-                    // Extraer variables asegurando compatibilidad si cambian los nombres en tu BD
-                    const id = p.id;
-                    const nombre = p.nombre || "Producto sin nombre";
-                    const descripcion = p.descripcion || "Fresco y de la mejor calidad";
                     const precio = p.precio_venta || p.precio || 0;
-                    const unidad = p.unidad_medida || p.unidad || "unidad";
-                    const imgUrl = p.imagen_url || p.imagen || "";
-
-                    // Bloque para la foto
-                    let bloqueFoto = `<div class="contenedor-foto"><span class="sin-foto">Espacio para Foto</span></div>`;
-                    if (imgUrl && imgUrl !== '' && !imgUrl.includes('placeholder')) {
-                        bloqueFoto = `<div class="contenedor-foto"><img src="${imgUrl}" alt="${nombre}"></div>`;
+                    const unidad = p.unidad_medida || 'kg';
+                    let bloqueFoto = `<div class="contenedor-foto"><span class="sin-foto">Sin Foto</span></div>`;
+                    if (p.imagen_url) {
+                        bloqueFoto = `<div class="contenedor-foto"><img src="${p.imagen_url}" alt="${p.nombre}"></div>`;
                     }
 
                     divCatalogo.innerHTML += `
                         <div class="tarjeta">
                             ${bloqueFoto}
                             <div>
-                                <h3>${nombre}</h3>
-                                <p style="color:#666; font-size:0.9em; margin-top:8px;">${descripcion}</p>
+                                <h3>${p.nombre}</h3>
+                                <p style="color:#666; font-size:0.9em; margin-top:8px;">${p.descripcion || ''}</p>
                             </div>
                             <div>
-                                <p class="precio">$${Number(precio).toFixed(2)} <span style="font-size:0.7em; color:#666; font-weight:normal;">x ${unidad}</span></p>
-                                <button onclick="agregarAlCarrito(${id})">Agregar al pedido</button>
+                                <p class="precio">$${Number(precio).toFixed(2)} <span style="font-size:0.7em; color:#666;">x ${unidad}</span></p>
+                                <button onclick="agregarAlCarrito(${p.id})">Agregar al pedido</button>
                             </div>
                         </div>
                     `;
                 });
-            } catch (err) { 
-                console.error("Error al cargar productos:", err); 
-                divCatalogo.innerHTML = '<p style="color: #d32f2f; font-weight: bold;">Error al conectar con el servidor de productos.</p>';
+            } catch (err) {
+                divCatalogo.innerHTML = '<p>Error al cargar productos.</p>';
             }
         }
 
         function agregarAlCarrito(id) {
             const producto = productosData.find(p => p.id === id);
             if (!producto) return;
-
-            const itemEnCarrito = carrito.find(item => item.id === id);
-            const unidad = (producto.unidad_medida || producto.unidad || "unidad").toLowerCase();
-            
-            if (itemEnCarrito) {
-                itemEnCarrito.cantidad += (unidad === 'kg') ? 0.5 : 1;
+            const item = carrito.find(i => i.id === id);
+            if (item) {
+                item.cantidad += 1;
             } else {
-                carrito.push({ ...producto, cantidad: (unidad === 'kg') ? 1 : 1 });
+                carrito.push({ ...producto, cantidad: 1 });
             }
             actualizarInterfazCarrito();
         }
@@ -218,55 +202,38 @@
         function actualizarInterfazCarrito() {
             const contenedor = document.getElementById('items-carrito');
             const totalDiv = document.getElementById('total');
-            
-            if (carrito.length === 0) {
+            if (!carrito.length) {
                 contenedor.innerHTML = '<p style="color: #777;">El carrito está vacío.</p>';
                 totalDiv.innerText = "Total: $0.00";
                 return;
             }
-            
             contenedor.innerHTML = '';
             let total = 0;
-            
             carrito.forEach(item => {
-                const precio = item.precio_venta || item.precio || 0;
-                const unidad = item.unidad_medida || item.unidad || "unidad";
+                const precio = item.precio_venta || 0;
                 const subtotal = precio * item.cantidad;
                 total += subtotal;
-                
                 contenedor.innerHTML += `
                     <div class="item-carrito">
-                        <span>${item.nombre} (x${item.cantidad} ${unidad})</span>
-                        <span style="font-weight:bold;">$${subtotal.toFixed(2)}</span>
+                        <span>${item.nombre} (x${item.cantidad})</span>
+                        <b>$${subtotal.toFixed(2)}</b>
                     </div>
                 `;
             });
-            
             totalDiv.innerText = `Total: $${total.toFixed(2)}`;
         }
 
         function enviarWhatsApp() {
-            if (carrito.length === 0) {
-                alert("¡Tu carrito está vacío! Agregá algún producto primero.");
-                return;
-            }
-            
-            let clienteNombre = usuarioActual ? usuarioActual.nombre_completo : "Cliente Web";
-
-            let texto = `🍗 *NUEVO PEDIDO - POLLERÍA JYREH* 🛒\n`;
-            texto += `👤 *Cliente:* ${clienteNombre}\n\n`;
-            
+            if (!carrito.length) return alert("El carrito está vacío");
+            let cliente = usuarioActual ? usuarioActual.nombre_completo : "Cliente Web";
+            let texto = `🍗 *NUEVO PEDIDO - POLLERÍA JYREH*\n👤 *Cliente:* ${cliente}\n\n`;
             let total = 0;
             carrito.forEach(item => {
-                const precio = item.precio_venta || item.precio || 0;
-                const unidad = item.unidad_medida || item.unidad || "unidad";
-                const subtotal = precio * item.cantidad;
+                const subtotal = (item.precio_venta || 0) * item.cantidad;
                 total += subtotal;
-                texto += `• ${item.nombre} x ${item.cantidad} ${unidad} -> *$${subtotal.toFixed(2)}*\n`;
+                texto += `• ${item.nombre} x${item.cantidad} -> *$${subtotal.toFixed(2)}*\n`;
             });
-            
-            texto += `\n💰 *Total a Pagar: $${total.toFixed(2)}*`;
-            
+            texto += `\n💰 *Total: $${total.toFixed(2)}*`;
             window.open(`https://api.whatsapp.com/send?phone=${NUMERO_CELULAR}&text=${encodeURIComponent(texto)}`, '_blank');
         }
     </script>

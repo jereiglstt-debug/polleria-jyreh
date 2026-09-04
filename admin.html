@@ -3,79 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel de Administración - Pollería Jyreh</title>
+    <title>Panel de Control - Pollería Jyreh</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: 'Segoe UI', Arial, sans-serif; background: #fafafa; color: #222; padding: 20px; }
         
-        /* Barra Superior */
         .barra-admin { background: #ffffff; padding: 14px 24px; display: flex; justify-content: space-between; align-items: center; border-radius: 10px; margin-bottom: 25px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); border-left: 6px solid #d32f2f; }
-        .titulo-panel { font-weight: bold; color: #d32f2f; font-size: 1.1em; text-transform: uppercase; letter-spacing: 1px; }
-        .btn-volver { background: #757575; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; text-decoration: none; font-size: 0.9em; transition: 0.2s; }
-        .btn-volver:hover { background: #616161; transform: scale(1.04); }
+        .titulo-panel { font-weight: bold; color: #d32f2f; font-size: 1.1em; text-transform: uppercase; }
+        
+        .btn-volver { background: #757575; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; text-decoration: none; font-size: 0.9em; }
+        .btn-volver:hover { background: #616161; }
 
-        /* Encabezado Principal */
-        header { background: #d32f2f; color: white; padding: 25px; text-align: center; border-radius: 12px; margin-bottom: 30px; box-shadow: 0 4px 12px rgba(211, 47, 47, 0.2); }
+        header { background: #d32f2f; color: white; padding: 25px; text-align: center; border-radius: 12px; margin-bottom: 30px; }
         header h1 { font-size: 2.2em; font-weight: 900; text-transform: uppercase; }
 
         .layout { display: flex; gap: 25px; flex-wrap: wrap; }
         
-        /* Formulario de Carga */
-        .seccion-formulario { flex: 1; min-width: 320px; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.06); height: fit-content; border-top: 5px solid #d32f2f; }
-        .seccion-formulario h3 { margin-bottom: 20px; color: #333; border-bottom: 2px solid #f0f0f0; padding-bottom: 8px; }
+        .seccion-formulario { flex: 1; min-width: 320px; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.06); border-top: 5px solid #d32f2f; }
+        .seccion-formulario h3 { margin-bottom: 20px; color: #333; }
         
         .grupo-control { margin-bottom: 15px; }
-        .grupo-control label { display: block; font-weight: bold; margin-bottom: 6px; font-size: 0.9em; color: #555; }
-        .grupo-control input, .grupo-control select, .grupo-control textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-family: inherit; font-size: 1em; }
-        .grupo-control input:focus, .grupo-control select:focus, .grupo-control textarea:focus { border-color: #d32f2f; outline: none; }
+        .grupo-control label { display: block; font-weight: bold; margin-bottom: 6px; font-size: 0.9em; }
+        .grupo-control input, .grupo-control select, .grupo-control textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; }
 
-        /* Tabla de Productos */
         .seccion-tabla { flex: 2; min-width: 450px; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.06); border-top: 5px solid #2e7d32; }
-        .seccion-tabla h3 { margin-bottom: 20px; color: #2e7d32; border-bottom: 2px solid #e8f5e9; padding-bottom: 8px; }
 
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.95em; }
-        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #f0f0f0; }
-        th { background: #f9f9f9; font-weight: bold; color: #555; }
-        tr:hover { background: #fdfdfd; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #f0f0f0; }
+        th { background: #f9f9f9; }
 
-        /* Botones e Interacciones */
-        button { border: none; border-radius: 6px; font-weight: bold; cursor: pointer; transition: transform 0.15s ease, background-color 0.2s; }
-        button:hover { transform: scale(1.04); }
-        
-        .btn-guardar { background: #27ae60; color: white; padding: 12px; width: 100%; font-size: 1em; }
-        .btn-guardar:hover { background: #219150; }
-        .btn-cancelar { background: #e0e0e0; color: #333; padding: 10px; width: 100%; margin-top: 10px; font-size: 0.9em; }
-        .btn-cancelar:hover { background: #d5d5d5; }
-
-        .btn-editar { background: #f39c12; color: white; padding: 6px 12px; font-size: 0.85em; margin-right: 5px; }
-        .btn-editar:hover { background: #d68910; }
-        .btn-eliminar { background: #c0392b; color: white; padding: 6px 12px; font-size: 0.85em; }
-        .btn-eliminar:hover { background: #a93226; }
-
-        .badge-unidad { background: #e1f5fe; color: #0288d1; padding: 3px 8px; border-radius: 4px; font-weight: bold; font-size: 0.8em; }
-        .badge-kg { background: #efebe9; color: #5d4037; padding: 3px 8px; border-radius: 4px; font-weight: bold; font-size: 0.8em; }
-        .miniatura-foto { width: 45px; height: 45px; object-fit: cover; border-radius: 4px; border: 1px solid #ddd; background: #fafafa; }
-
-        /* NOTIFICACIONES EMERGENTES ELEGANTES (TOASTS) */
-        #toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
-        .toast { padding: 14px 20px; border-radius: 8px; color: white; font-weight: bold; font-size: 0.95em; box-shadow: 0 4px 12px rgba(0,0,0,0.15); opacity: 0; transform: translateY(-20px); transition: all 0.3s ease; }
-        .toast.mostrar { opacity: 1; transform: translateY(0); }
-        .toast.exito { background: #27ae60; }
-        .toast.error { background: #c0392b; }
-        .toast.info { background: #2980b9; }
+        button { border: none; border-radius: 6px; font-weight: bold; cursor: pointer; padding: 10px; }
+        .btn-guardar { background: #27ae60; color: white; width: 100%; }
+        .btn-editar { background: #f39c12; color: white; margin-right: 5px; padding: 6px 12px; }
+        .btn-eliminar { background: #c0392b; color: white; padding: 6px 12px; }
     </style>
 </head>
 <body>
 
-    <div id="toast-container"></div>
-
     <div class="barra-admin">
         <div class="titulo-panel">⚙️ Panel de Control Interno</div>
-        <a href="/" class="btn-volver">🏪 Ir a la Tienda</a>
+        <a href="/" class="btn-volver">🏪 Volver a la Tienda</a>
     </div>
 
     <header>
-        <h1>Gestión de Productos - Jyreh</h1>
+        <h1>Gestión de Productos</h1>
     </header>
 
     <div class="layout">
@@ -85,22 +56,22 @@
                 <input type="hidden" id="prod-id">
                 
                 <div class="grupo-control">
-                    <label for="prod-nombre">Nombre del Producto</label>
-                    <input type="text" id="prod-nombre" placeholder="Ej: Milanesas de Pollo Rebozadas" required>
+                    <label>Nombre del Producto</label>
+                    <input type="text" id="prod-nombre" required>
                 </div>
 
                 <div class="grupo-control">
-                    <label for="prod-descripcion">Descripción / Notas</label>
-                    <textarea id="prod-descripcion" rows="3" placeholder="Ej: Súper tiernas, listas para cocinar..."></textarea>
+                    <label>Descripción</label>
+                    <textarea id="prod-descripcion" rows="3"></textarea>
                 </div>
 
                 <div class="grupo-control">
-                    <label for="prod-precio">Precio de Venta ($)</label>
-                    <input type="number" id="prod-precio" step="0.01" placeholder="0.00" required>
+                    <label>Precio de Venta ($)</label>
+                    <input type="number" id="prod-precio" step="0.01" required>
                 </div>
 
                 <div class="grupo-control">
-                    <label for="prod-unidad">Unidad de Medida</label>
+                    <label>Unidad de Medida</label>
                     <select id="prod-unidad">
                         <option value="kg">Por Kilogramo (Kg)</option>
                         <option value="unidad">Por Unidad (U)</option>
@@ -108,206 +79,111 @@
                 </div>
 
                 <div class="grupo-control">
-                    <label for="prod-imagen">Enlace / Ruta de la Foto (Opcional)</label>
-                    <input type="text" id="prod-imagen" placeholder="Ej: /images/milanesa.jpg">
+                    <label>Ruta de Foto (URL)</label>
+                    <input type="text" id="prod-imagen">
                 </div>
 
                 <button type="submit" class="btn-guardar" id="btn-submit">💾 Guardar Producto</button>
-                <button type="button" class="btn-cancelar" id="btn-limpiar" onclick="limpiarFormulario()" style="display: none;">Cancelar Edición</button>
             </form>
         </div>
 
         <div class="seccion-tabla">
-            <h3>Listado Actual de Productos</h3>
-            <div style="overflow-x: auto;">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Foto</th>
-                            <th>Nombre</th>
-                            <th>Medida</th>
-                            <th>Precio</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tabla-productos-body">
-                        <tr>
-                            <td colspan="5" style="text-align: center; color: #888;">Cargando lista de productos...</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+            <h3>Productos en Catálogo</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Medida</th>
+                        <th>Precio</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="tabla-productos-body">
+                    <tr><td colspan="4">Cargando...</td></tr>
+                </tbody>
+            </table>
         </div>
     </div>
 
     <script>
-        let productosAbiertos = [];
+        let productos = [];
         let modoEdicion = false;
 
-        window.onload = function() {
-            obtenerProductos();
+        window.onload = async function() {
+            // Protección: Si no es admin, regresa a la tienda inmediatamente
+            const res = await fetch('/api/auth/me');
+            if (!res.ok) return window.location.href = '/';
+            const user = await res.json();
+            if (!user.es_admin) return window.location.href = '/';
+
+            cargarTabla();
         }
 
-        // --- SISTEMA DE NOTIFICACIONES ELEGANTES (Sin alert feos) ---
-        function mostrarNotificacion(mensaje, tipo = 'exito') {
-            const container = document.getElementById('toast-container');
-            const toast = document.createElement('div');
-            toast.className = `toast ${tipo}`;
-            toast.innerText = mensaje;
-            
-            container.appendChild(toast);
-            
-            // Animación de entrada
-            setTimeout(() => toast.classList.add('mostrar'), 10);
-
-            // Animación de salida y auto-eliminación en 3 segundos
-            setTimeout(() => {
-                toast.classList.remove('mostrar');
-                setTimeout(() => toast.remove(), 300);
-            }, 3000);
-        }
-
-        // 1. TRAER LOS PRODUCTOS DE LA BD
-        async function obtenerProductos() {
+        async function cargarTabla() {
+            const res = await fetch('/api/productos');
+            productos = await res.json();
             const tbody = document.getElementById('tabla-productos-body');
-            try {
-                const res = await fetch('/api/productos');
-                productosAbiertos = await res.json();
-                
-                if (!productosAbiertos || productosAbiertos.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #888;">No hay productos registrados.</td></tr>`;
-                    return;
-                }
+            tbody.innerHTML = '';
 
-                tbody.innerHTML = '';
-                productosAbiertos.forEach(p => {
-                    const id = p.id;
-                    const nombre = p.nombre || "Producto sin nombre";
-                    const precio = p.precio_venta || p.precio || 0;
-                    const unidad = p.unidad_medida || p.unidad || "unidad";
-                    const imgUrl = p.imagen_url || p.imagen || "";
-
-                    const badgeMedida = unidad.toLowerCase() === 'kg' 
-                        ? `<span class="badge-kg">Kg</span>` 
-                        : `<span class="badge-unidad">Unidad</span>`;
-
-                    let tagFoto = `<div style="font-size: 1.1em; text-align:center; background:#eee; width:45px; height:45px; line-height:45px; border-radius:4px; color:#aaa;">🍗</div>`;
-                    if (imgUrl && imgUrl !== '' && !imgUrl.includes('placeholder')) {
-                        tagFoto = `<img src="${imgUrl}" class="miniatura-foto" alt="foto">`;
-                    }
-
-                    tbody.innerHTML += `
-                        <tr>
-                            <td>${tagFoto}</td>
-                            <td style="font-weight: 600; color: #333;">${nombre}</td>
-                            <td>${badgeMedida}</td>
-                            <td style="font-weight: bold; color: #2e7d32;">$${Number(precio).toFixed(2)}</td>
-                            <td>
-                                <button class="btn-editar" onclick="cargarParaEditar(${id})">✏️</button>
-                                <button class="btn-eliminar" onclick="eliminarProducto(${id})">🗑️</button>
-                            </td>
-                        </tr>
-                    `;
-                });
-            } catch (err) {
-                console.error("Error al traer productos:", err);
-                tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #d32f2f; font-weight: bold;">Error al conectar con el servidor.</td></tr>`;
-                mostrarNotificacion("Error al conectar con la base de datos.", "error");
-            }
+            productos.forEach(p => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td><b>${p.nombre}</b></td>
+                        <td>${p.unidad_medida || 'kg'}</td>
+                        <td>$${Number(p.precio_venta || 0).toFixed(2)}</td>
+                        <td>
+                            <button class="btn-editar" onclick="editar(${p.id})">✏️</button>
+                            <button class="btn-eliminar" onclick="eliminar(${p.id})">🗑️</button>
+                        </td>
+                    </tr>
+                `;
+            });
         }
 
-        // 2. GUARDAR DATOS (POST / PUT)
-        async function guardarProducto(event) {
-            event.preventDefault();
-
+        async function guardarProducto(e) {
+            e.preventDefault();
             const id = document.getElementById('prod-id').value;
-            const nombre = document.getElementById('prod-nombre').value;
-            const descripcion = document.getElementById('prod-descripcion').value;
-            const precio_venta = parseFloat(document.getElementById('prod-precio').value);
-            const unidad_medida = document.getElementById('prod-unidad').value;
-            const imagen_url = document.getElementById('prod-imagen').value;
+            const datos = {
+                nombre: document.getElementById('prod-nombre').value,
+                descripcion: document.getElementById('prod-descripcion').value,
+                precio_venta: parseFloat(document.getElementById('prod-precio').value),
+                unidad_medida: document.getElementById('prod-unidad').value,
+                imagen_url: document.getElementById('prod-imagen').value
+            };
 
-            const datosProducto = { nombre, descripcion, precio_venta, unidad_medida, imagen_url };
+            const url = modoEdicion ? `/api/productos/${id}` : '/api/productos';
+            const method = modoEdicion ? 'PUT' : 'POST';
 
-            let url = '/api/productos';
-            let metodo = 'POST';
+            await fetch(url, {
+                method: method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(datos)
+            });
 
-            if (modoEdicion && id) {
-                url = `/api/productos/${id}`;
-                metodo = 'PUT';
-            }
-
-            try {
-                const res = await fetch(url, {
-                    method: metodo,
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(datosProducto)
-                });
-
-                if (res.ok) {
-                    mostrarNotificacion(modoEdicion ? "✨ ¡Producto actualizado correctamente!" : "🎉 ¡Producto guardado con éxito!", "exito");
-                    limpiarFormulario();
-                    obtenerProductos();
-                } else {
-                    mostrarNotificacion("Ocurrió un problema en el servidor al guardar.", "error");
-                }
-            } catch (err) {
-                console.error("Error al guardar:", err);
-                mostrarNotificacion("Error de red. Verificá que el servidor esté encendido.", "error");
-            }
-        }
-
-        // 3. EDITAR PRODUCTO
-        function cargarParaEditar(id) {
-            const producto = productosAbiertos.find(p => p.id === id);
-            if (!producto) return;
-
-            document.getElementById('prod-id').value = producto.id;
-            document.getElementById('prod-nombre').value = producto.nombre || '';
-            document.getElementById('prod-descripcion').value = producto.descripcion || '';
-            document.getElementById('prod-precio').value = producto.precio_venta || producto.precio || '';
-            document.getElementById('prod-unidad').value = (producto.unidad_medida || producto.unidad || 'kg').toLowerCase();
-            document.getElementById('prod-imagen').value = producto.imagen_url || producto.imagen || '';
-
-            document.getElementById('form-titulo').innerText = "✏️ Editar Producto";
-            document.getElementById('btn-submit').innerText = "💾 Actualizar Cambios";
-            document.getElementById('btn-limpiar').style.display = "block";
-            modoEdicion = true;
-            
-            document.getElementById('formulario-producto').scrollIntoView({ behavior: 'smooth' });
-            mostrarNotificacion("Modo edición activado", "info");
-        }
-
-        // 4. ELIMINAR PRODUCTO
-        async function eliminarProducto(id) {
-            // Un cuadro de confirmación rápido antes de borrar
-            if (!confirm("¿Querés eliminar este producto?")) return;
-
-            try {
-                const res = await fetch(`/api/productos/${id}`, { method: 'DELETE' });
-                if (res.ok) {
-                    mostrarNotificacion("🗑️ Producto eliminado del catálogo.", "error");
-                    obtenerProductos();
-                    if (document.getElementById('prod-id').value == id) {
-                        limpiarFormulario();
-                    }
-                } else {
-                    mostrarNotificacion("No se pudo eliminar el producto.", "error");
-                }
-            } catch (err) {
-                console.error("Error al eliminar:", err);
-                mostrarNotificacion("Error de red al procesar la baja.", "error");
-            }
-        }
-
-        // 5. REINICIAR FORMULARIO
-        function limpiarFormulario() {
             document.getElementById('formulario-producto').reset();
-            document.getElementById('prod-id').value = '';
-            document.getElementById('form-titulo').innerText = "Agregar Nuevo Producto";
-            document.getElementById('btn-submit').innerText = "💾 Guardar Producto";
-            document.getElementById('btn-limpiar').style.display = "none";
             modoEdicion = false;
+            document.getElementById('btn-submit').innerText = "💾 Guardar Producto";
+            cargarTabla();
+        }
+
+        function editar(id) {
+            const p = productos.find(prod => prod.id === id);
+            if (!p) return;
+            document.getElementById('prod-id').value = p.id;
+            document.getElementById('prod-nombre').value = p.nombre;
+            document.getElementById('prod-descripcion').value = p.descripcion || '';
+            document.getElementById('prod-precio').value = p.precio_venta;
+            document.getElementById('prod-unidad').value = p.unidad_medida || 'kg';
+            document.getElementById('prod-imagen').value = p.imagen_url || '';
+
+            modoEdicion = true;
+            document.getElementById('btn-submit').innerText = "💾 Actualizar Producto";
+        }
+
+        async function eliminar(id) {
+            if (!confirm("¿Eliminar producto?")) return;
+            await fetch(`/api/productos/${id}`, { method: 'DELETE' });
+            cargarTabla();
         }
     </script>
 </body>
